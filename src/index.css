@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=ZCOOL+KuaiLe&display=swap');
+
+:root {
+  --bg-color: #f0f2f5;
+  --card-bg: #ffffff;
+  --text-main: #050505;
+  --text-secondary: #65676b;
+  --accent-color: #1877f2;
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* App Container */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Grid Layout */
+.reels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Reel Card */
+.reel-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 9/16;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.reel-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.reel-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  padding: 20px 12px 12px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.card-chinese {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 24px;
+  font-weight: 400;
+  margin-bottom: 4px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.card-views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Viewer (Full Screen) */
+.viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #000;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 1010;
+  backdrop-filter: blur(4px);
+}
+
+.close-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.viewer-content {
+  position: relative;
+  width: 100%;
+  max-width: 450px;
+  height: 100vh;
+  max-height: 900px;
+  background-color: #111;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .viewer-content {
+    height: 90vh;
+    border-radius: 16px;
+  }
+}
+
+.viewer-content img, .viewer-content video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.viewer-info {
+  position: absolute;
+  bottom: 40px;
+  left: 20px;
+  right: 80px;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+.viewer-chinese {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 42px;
+  font-weight: 400;
+  margin-bottom: 8px;
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.viewer-pinyin {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.viewer-vietnamese {
+  font-size: 18px;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.viewer-actions {
+  position: absolute;
+  bottom: 40px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.action-btn span {
+  font-size: 13px;
+  font-weight: 600;
+}

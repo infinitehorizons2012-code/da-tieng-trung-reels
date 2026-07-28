@@ -1,0 +1,110 @@
+import React, { useState, useEffect } from 'react';
+import { reelsData } from './data';
+import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft } from 'lucide-react';
+import './index.css';
+
+function ReelCard({ data, onClick }) {
+  return (
+    <div className="reel-card" onClick={() => onClick(data)}>
+      <img src={data.image} alt={data.title} loading="lazy" />
+      <div className="reel-card-overlay">
+        <div className="card-chinese">{data.title}</div>
+        <div className="card-views">
+          <Play fill="white" size={12} />
+          {data.views}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReelViewer({ data, onClose }) {
+  // Prevent scrolling on body when viewer is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  const [liked, setLiked] = useState(false);
+
+  return (
+    <div className="viewer-overlay">
+      <button className="close-btn" onClick={onClose}>
+        <ArrowLeft size={24} />
+      </button>
+      
+      <div className="viewer-content">
+        <img src={data.image} alt={data.title} />
+        
+        {/* Overlay Info */}
+        <div className="viewer-info">
+          <div className="viewer-chinese">{data.title}</div>
+          <div className="viewer-pinyin">{data.pinyin}</div>
+          <div className="viewer-vietnamese">{data.vietnamese}</div>
+        </div>
+
+        {/* Actions Menu */}
+        <div className="viewer-actions">
+          <button className="action-btn" onClick={() => setLiked(!liked)}>
+            <Heart size={32} fill={liked ? "#ff2a5f" : "none"} color={liked ? "#ff2a5f" : "white"} />
+            <span>{data.likes}</span>
+          </button>
+          <button className="action-btn">
+            <MessageCircle size={32} />
+            <span>Bình luận</span>
+          </button>
+          <button className="action-btn">
+            <Share2 size={32} />
+            <span>Chia sẻ</span>
+          </button>
+          <button className="action-btn">
+            <MoreHorizontal size={32} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [selectedReel, setSelectedReel] = useState(null);
+
+  return (
+    <div className="app-container">
+      {/* Header */}
+      <header className="header">
+        <h1>
+          <img 
+            src="https://images.unsplash.com/photo-1590845947698-8924d7409b56?w=100&h=100&fit=crop" 
+            alt="Avatar" 
+            className="avatar" 
+          />
+          Bé học tiếng Trung
+        </h1>
+      </header>
+
+      {/* Main Grid */}
+      <main className="reels-grid">
+        {reelsData.map((reel) => (
+          <ReelCard 
+            key={reel.id} 
+            data={reel} 
+            onClick={setSelectedReel} 
+          />
+        ))}
+      </main>
+
+      {/* Fullscreen Viewer */}
+      {selectedReel && (
+        <ReelViewer 
+          data={selectedReel} 
+          onClose={() => setSelectedReel(null)} 
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;
