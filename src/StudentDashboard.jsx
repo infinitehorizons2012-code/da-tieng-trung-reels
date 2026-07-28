@@ -31,10 +31,6 @@ function ReelCard({ data, progress, onClick }) {
 
       <div className="reel-card-overlay">
         <div className="card-chinese">{data.title}</div>
-        <div className="card-views">
-          <Play fill="white" size={12} />
-          {data.views}
-        </div>
       </div>
     </div>
   );
