@@ -1,8 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { LogOut, CheckCircle, Clock, XCircle, Users, Play, X, Trash2 } from 'lucide-react';
+import { LogOut, CheckCircle, Clock, XCircle, Users, Play, X, Trash2, CalendarDays } from 'lucide-react';
 import { reelsData } from './data';
+
+function ReportView({ stats, progress, reels }) {
+  const grouped = {};
+  stats.forEach(s => {
+    if (!grouped[s.date]) grouped[s.date] = [];
+    grouped[s.date].push(s);
+  });
+
+  const dates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+  if (dates.length === 0) {
+    return <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Chưa có dữ liệu học tập nào được ghi nhận.</div>;
+  }
+
+  return (
+    <div>
+      {dates.map(date => {
+        const d = new Date(date);
+        const dateStr = d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' });
+        return (
+          <div key={date} style={{ marginBottom: '32px' }}>
+            <h4 style={{ background: '#f5f5f5', padding: '12px', borderRadius: '8px', marginBottom: '12px', color: '#333' }}>{dateStr}</h4>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #ddd', textAlign: 'left', background: '#fafafa' }}>
+                    <th style={{ padding: '12px', width: '40%' }}>Video bài học</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>Số lần Click mở</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>Xem hết vòng lặp</th>
+                    <th style={{ padding: '12px' }}>Trạng thái hiện tại</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grouped[date].map(s => {
+                    const video = reels.find(r => r.id === s.videoId);
+                    const p = progress[s.videoId] || {};
+                    let statusText = 'Chưa luyện tập';
+                    let statusColor = '#999';
+                    if (p.status === 'PASSED') { statusText = 'Đạt 100%'; statusColor = '#4caf50'; }
+                    if (p.status === 'WAITING') { statusText = 'Đang chờ KT'; statusColor = '#1976d2'; }
+                    if (p.status === 'PRACTICING') { statusText = 'Đang luyện tập'; statusColor = '#ff9800'; }
+                    if (p.status === 'FAILED') { statusText = 'Làm sai'; statusColor = '#f44336'; }
+
+                    return (
+                      <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ fontWeight: 'bold' }}>{video ? video.title : 'Video đã xóa'}</div>
+                          <div style={{ fontSize: '12px', color: '#666' }}>{video ? video.vietnamese : ''}</div>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1976d2', fontSize: '16px' }}>{s.clicks || 0}</td>
+                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#4caf50', fontSize: '16px' }}>{s.fullWatches || 0}</td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{ background: `${statusColor}22`, color: statusColor, padding: '4px 12px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }}>
+                            {statusText}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function TeacherDashboard({ user, onLogout }) {
   const [students, setStudents] = useState([]);
@@ -10,10 +78,29 @@ export default function TeacherDashboard({ user, onLogout }) {
   const [progressData, setProgressData] = useState({});
   const [testingVideo, setTestingVideo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('grading');
+  const [dailyStats, setDailyStats] = useState([]);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchDailyStats(selectedStudent.id);
+    }
+  }, [selectedStudent]);
+
+  const fetchDailyStats = async (studentId) => {
+    try {
+      const q = query(collection(db, 'daily_stats'), where('userId', '==', studentId));
+      const snap = await getDocs(q);
+      const stats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setDailyStats(stats);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -223,15 +310,32 @@ export default function TeacherDashboard({ user, onLogout }) {
 
               return (
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h3>Hồ sơ học tập: {selectedStudent.name}</h3>
+                  <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid #eee' }}>
                     <button 
-                      onClick={getRandomVideoForTest}
-                      style={{ background: '#9c27b0', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={() => setActiveTab('grading')}
+                      style={{ padding: '12px 24px', background: 'none', border: 'none', borderBottom: activeTab === 'grading' ? '3px solid #1877f2' : '3px solid transparent', fontWeight: 'bold', color: activeTab === 'grading' ? '#1877f2' : '#666', cursor: 'pointer', fontSize: '16px', transition: 'all 0.3s' }}
                     >
-                      <Play size={18} /> Hỏi bài ngẫu nhiên
+                      <CheckCircle size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Chấm bài & Lịch sử
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('report')}
+                      style={{ padding: '12px 24px', background: 'none', border: 'none', borderBottom: activeTab === 'report' ? '3px solid #1877f2' : '3px solid transparent', fontWeight: 'bold', color: activeTab === 'report' ? '#1877f2' : '#666', cursor: 'pointer', fontSize: '16px', transition: 'all 0.3s' }}
+                    >
+                      <CalendarDays size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Báo cáo theo ngày
                     </button>
                   </div>
+
+                  {activeTab === 'grading' ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <h3>Hồ sơ học tập: {selectedStudent.name}</h3>
+                        <button 
+                          onClick={getRandomVideoForTest}
+                          style={{ background: '#9c27b0', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        >
+                          <Play size={18} /> Hỏi bài ngẫu nhiên
+                        </button>
+                      </div>
 
                   {/* Waiting for test */}
                   <h4 style={{ color: '#1976d2', marginBottom: '12px' }}>Video đang chờ kiểm tra ({waitingVideos.length})</h4>
@@ -283,6 +387,10 @@ export default function TeacherDashboard({ user, onLogout }) {
                     <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px', color: '#666', textAlign: 'center' }}>
                       Chưa có lịch sử học tập
                     </div>
+                  )}
+                    </>
+                  ) : (
+                    <ReportView stats={dailyStats} progress={studentProgress} reels={safeReels} />
                   )}
                 </div>
               );

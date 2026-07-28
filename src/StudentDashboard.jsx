@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { reelsData } from './data';
 import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users } from 'lucide-react';
 import { db } from './firebase';
-import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp, increment } from 'firebase/firestore';
 
 function ReelCard({ data, progress, onClick }) {
   const status = progress?.status;
@@ -36,12 +36,25 @@ function ReelCard({ data, progress, onClick }) {
   );
 }
 
-function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
+function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick, user }) {
   const videoRef = React.useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [hasTrackedFullWatch, setHasTrackedFullWatch] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    
+    // Ghi nhận sự kiện click mở video
+    if (user) {
+      const today = new Date().toLocaleDateString('en-CA'); // Trả về dạng YYYY-MM-DD an toàn theo timezone
+      const statsRef = doc(db, 'daily_stats', `${user.id}_${data.id}_${today}`);
+      setDoc(statsRef, {
+        userId: user.id,
+        videoId: data.id,
+        date: today,
+        clicks: increment(1)
+      }, { merge: true }).catch(console.error);
+    }
     
     const handleKeyDown = (e) => {
       if (e.code === 'Space') {
@@ -55,17 +68,37 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
       document.body.style.overflow = 'auto';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [user, data.id]);
 
   const togglePlay = () => {
     if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setIsPlaying(true);
-      } else {
+      if (isPlaying) {
         videoRef.current.pause();
-        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
       }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.currentTime >= video.duration - 0.5) {
+      if (!hasTrackedFullWatch && user) {
+        setHasTrackedFullWatch(true);
+        const today = new Date().toLocaleDateString('en-CA');
+        const statsRef = doc(db, 'daily_stats', `${user.id}_${data.id}_${today}`);
+        setDoc(statsRef, {
+          userId: user.id,
+          videoId: data.id,
+          date: today,
+          fullWatches: increment(1)
+        }, { merge: true }).catch(console.error);
+      }
+    } else if (video.currentTime < 1) {
+      setHasTrackedFullWatch(false);
     }
   };
 
@@ -116,7 +149,7 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
       <div className="viewer-content">
         {data.videoUrl ? (
           <div style={{ position: 'relative', width: '100%', height: '100%' }} onClick={togglePlay}>
-            <video ref={videoRef} src={data.videoUrl} autoPlay loop playsInline controls={false} />
+            <video ref={videoRef} src={data.videoUrl} autoPlay loop playsInline controls={false} onTimeUpdate={handleTimeUpdate} />
             {!isPlaying && (
               <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Play size={48} color="white" fill="white" />
@@ -306,6 +339,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
           onClose={handleClose}
           onRegisterTest={user ? handleRegisterTest : null}
           onLoginClick={onLoginClick}
+          user={user}
         />
       )}
 
