@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { reelsData } from './data';
-import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy } from 'lucide-react';
+import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users } from 'lucide-react';
 import { db } from './firebase';
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 function ReelCard({ data, progress, onClick }) {
   const status = progress?.status;
@@ -142,6 +141,9 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
   const [progressData, setProgressData] = useState({});
   const [leaderboard, setLeaderboard] = useState([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [teachersList, setTeachersList] = useState([]);
+  const [selectedTeachers, setSelectedTeachers] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -190,6 +192,47 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
     }
   };
 
+  const openTeacherModal = async () => {
+    if (!user) return;
+    setShowTeacherModal(true);
+    try {
+      // 1. Fetch teachers
+      const tQ = query(collection(db, 'users'), where('role', '==', 'teacher'));
+      const tSnap = await getDocs(tQ);
+      setTeachersList(tSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      
+      // 2. Fetch current user's teacherIds
+      const userRef = doc(db, 'users', user.id);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        setSelectedTeachers(uData.teacherIds || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const saveTeachers = async () => {
+    if (selectedTeachers.length === 0) {
+      alert("Bạn phải chọn ít nhất 1 giáo viên!");
+      return;
+    }
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await setDoc(userRef, { teacherIds: selectedTeachers }, { merge: true });
+      
+      const updatedUser = { ...user, teacherIds: selectedTeachers };
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      
+      alert("Cập nhật giáo viên thành công!");
+      setShowTeacherModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi khi lưu!");
+    }
+  };
+
   const handleRegisterTest = async (videoId) => {
     if (!user) return;
     try {
@@ -226,6 +269,9 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
         <div style={{ display: 'flex', gap: '12px' }}>
           {user ? (
             <>
+              <button onClick={openTeacherModal} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e3f2fd', color: '#1976d2', border: '1px solid #1976d2', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <Users size={18} /> Đổi giáo viên
+              </button>
               <button onClick={fetchLeaderboard} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff9c4', color: '#fbc02d', border: '1px solid #fbc02d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                 <Trophy size={18} /> Bảng Vàng
               </button>
@@ -281,6 +327,44 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Selection Modal */}
+      {showTeacherModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '90%', maxWidth: '400px', position: 'relative' }}>
+            <button onClick={() => setShowTeacherModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            <h2 style={{ textAlign: 'center', color: '#1976d2', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+              <Users size={32} /> Chọn Giáo Viên
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto', marginBottom: '24px' }}>
+              {teachersList.length > 0 ? teachersList.map(t => (
+                <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: '#f5f5f5', padding: '12px', borderRadius: '8px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedTeachers.includes(t.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedTeachers([...selectedTeachers, t.id]);
+                      else setSelectedTeachers(selectedTeachers.filter(id => id !== t.id));
+                    }}
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{t.name}</span>
+                </label>
+              )) : (
+                <div style={{ textAlign: 'center', color: '#666' }}>Không tìm thấy giáo viên nào.</div>
+              )}
+            </div>
+
+            <button 
+              onClick={saveTeachers}
+              style={{ width: '100%', background: '#4caf50', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Lưu thay đổi
+            </button>
           </div>
         </div>
       )}
