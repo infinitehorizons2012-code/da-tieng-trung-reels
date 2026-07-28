@@ -68,23 +68,43 @@ export default function TeacherDashboard({ user, onLogout }) {
     return { waiting, passed, practicing, failed, total: passed + practicing + failed + waiting };
   };
 
-  const handleGrade = async (videoId, status) => {
+  const handleGrade = async (videoId, isCorrect) => {
     if (!selectedStudent) return;
     try {
       const docId = `${selectedStudent.id}_${videoId}`;
+      
+      const currentProgress = progressData[selectedStudent.id]?.[videoId] || {};
+      let currentStreak = currentProgress.streak || 0;
+      if (currentProgress.status === 'PASSED') {
+          currentStreak = 5;
+      }
+
+      let newStreak = isCorrect ? currentStreak + 1 : 0;
+      let newStatus = 'WAITING';
+      
+      if (newStreak >= 5) {
+          newStatus = 'PASSED';
+      } else if (newStreak > 0) {
+          newStatus = 'PRACTICING';
+      } else {
+          newStatus = 'FAILED';
+      }
+
       await setDoc(doc(db, 'progress', docId), {
         userId: selectedStudent.id,
         videoId: videoId,
-        status: status,
+        status: newStatus,
+        streak: newStreak,
         updatedAt: serverTimestamp(),
         gradedBy: user.name
       });
+      
       // Refresh local state
       setProgressData(prev => ({
         ...prev,
         [selectedStudent.id]: {
           ...(prev[selectedStudent.id] || {}),
-          [videoId]: { status }
+          [videoId]: { ...currentProgress, status: newStatus, streak: newStreak }
         }
       }));
       setTestingVideo(null); // Close viewer after grading
@@ -244,17 +264,20 @@ export default function TeacherDashboard({ user, onLogout }) {
              <h2 style={{ fontFamily: '"ZCOOL KuaiLe", cursive', color: '#FFD700' }}>{testingVideo.title}</h2>
              <p style={{ fontSize: '20px' }}>{testingVideo.pinyin}</p>
              <p>{testingVideo.vietnamese}</p>
+             
+             {(() => {
+                const currentProgress = progressData[selectedStudent.id]?.[testingVideo.id] || {};
+                const streak = currentProgress.status === 'PASSED' ? 5 : (currentProgress.streak || 0);
+                return <p style={{ fontSize: '20px', color: '#00e676', fontWeight: 'bold', marginTop: '16px' }}>🔥 Chuỗi đúng: {streak}/5</p>
+             })()}
           </div>
 
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button onClick={() => handleGrade(testingVideo.id, 'PASSED')} style={{ background: '#4caf50', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-               <CheckCircle /> Đạt 100%
+            <button onClick={() => handleGrade(testingVideo.id, true)} style={{ background: '#4caf50', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '8px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+               <CheckCircle size={28} /> ĐÚNG
             </button>
-            <button onClick={() => handleGrade(testingVideo.id, 'PRACTICING')} style={{ background: '#ff9800', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-               <Clock /> Đang luyện tập
-            </button>
-            <button onClick={() => handleGrade(testingVideo.id, 'FAILED')} style={{ background: '#f44336', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-               <XCircle /> Chưa qua
+            <button onClick={() => handleGrade(testingVideo.id, false)} style={{ background: '#f44336', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '8px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+               <XCircle size={28} /> SAI
             </button>
           </div>
         </div>

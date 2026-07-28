@@ -4,7 +4,10 @@ import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOu
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
-function ReelCard({ data, status, onClick }) {
+function ReelCard({ data, progress, onClick }) {
+  const status = progress?.status;
+  const streak = status === 'PASSED' ? 5 : (progress?.streak || 0);
+
   let statusColor = 'transparent';
   if (status === 'PASSED') statusColor = '#4caf50'; // green
   if (status === 'PRACTICING') statusColor = '#ff9800'; // orange
@@ -22,7 +25,7 @@ function ReelCard({ data, status, onClick }) {
       {/* Status Badge */}
       {status && (
         <div style={{ position: 'absolute', top: 8, left: 8, background: statusColor, color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>
-          {status === 'PASSED' ? 'Đã đạt 100%' : status === 'PRACTICING' ? 'Đang luyện tập' : status === 'FAILED' ? 'Chưa qua' : 'Đang chờ KT'}
+          {status === 'PASSED' ? 'Đã đạt 100%' : status === 'PRACTICING' ? `Đang luyện tập (${streak}/5)` : status === 'FAILED' ? 'Chưa qua' : 'Đang chờ KT'}
         </div>
       )}
 
@@ -37,7 +40,7 @@ function ReelCard({ data, status, onClick }) {
   );
 }
 
-function ReelViewer({ data, status, onClose, onRegisterTest, onLoginClick }) {
+function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -47,6 +50,9 @@ function ReelViewer({ data, status, onClose, onRegisterTest, onLoginClick }) {
 
   const [liked, setLiked] = useState(false);
   const [registering, setRegistering] = useState(false);
+
+  const status = progress?.status;
+  const streak = status === 'PASSED' ? 5 : (progress?.streak || 0);
 
   const handleRegister = async () => {
     if (!onRegisterTest) return;
@@ -85,6 +91,10 @@ function ReelViewer({ data, status, onClose, onRegisterTest, onLoginClick }) {
             ) : status === 'PASSED' ? (
               <button disabled style={{ background: '#4caf50', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold' }}>
                 <CheckCircle size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Đã thuộc 100%
+              </button>
+            ) : status === 'PRACTICING' ? (
+              <button onClick={handleRegister} disabled={registering} style={{ background: '#ff9800', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                {registering ? 'Đang đăng ký...' : `Tiếp tục luyện tập (${streak}/5)`}
               </button>
             ) : (
               <button onClick={handleRegister} disabled={registering} style={{ background: '#ff4081', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
@@ -135,7 +145,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
       const snapshot = await getDocs(q);
       const pData = {};
       snapshot.docs.forEach(doc => {
-        pData[doc.data().videoId] = doc.data().status;
+        pData[doc.data().videoId] = doc.data();
       });
       setProgressData(pData);
     } catch (err) {
