@@ -38,6 +38,8 @@ function ReportView({ stats, progress, reels }) {
                 <tbody>
                   {grouped[date].map(s => {
                     const video = reels.find(r => r.id === s.videoId);
+                    if (!video) return null;
+
                     const p = progress[s.videoId] || {};
                     let statusText = 'Chưa luyện tập';
                     let statusColor = '#999';
