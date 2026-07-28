@@ -162,45 +162,67 @@ export default function TeacherDashboard({ user, onLogout }) {
         {/* Main Content: Student Detail & Test */}
         <div style={{ flex: 1, background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           {selectedStudent ? (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h3>Hồ sơ học tập: {selectedStudent.name}</h3>
-                <button 
-                  onClick={getRandomVideoForTest}
-                  style={{ background: '#9c27b0', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <Play size={18} /> Hỏi bài ngẫu nhiên
-                </button>
-              </div>
+            (() => {
+              const studentProgress = progressData[selectedStudent.id] || {};
+              const safeReels = Array.isArray(reelsData) ? reelsData : [];
+              
+              const waitingVideos = safeReels.filter(v => studentProgress[v.id] && studentProgress[v.id].status === 'WAITING');
+              const historyVideos = safeReels.filter(v => studentProgress[v.id] && studentProgress[v.id].status !== 'WAITING');
 
-              {/* Waiting for test */}
-              <h4 style={{ color: '#1976d2', marginBottom: '12px' }}>Video đang chờ kiểm tra</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-                {reelsData.filter(v => (progressData[selectedStudent.id]?.[v.id]?.status === 'WAITING')).map(video => (
-                  <div key={video.id} onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: '2px solid #1976d2', position: 'relative', aspectRatio: '9/16' }}>
-                    <video src={video.videoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', color: 'white', padding: '8px', fontSize: '12px', textAlign: 'center' }}>Bấm để kiểm tra</div>
+              return (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h3>Hồ sơ học tập: {selectedStudent.name}</h3>
+                    <button 
+                      onClick={getRandomVideoForTest}
+                      style={{ background: '#9c27b0', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <Play size={18} /> Hỏi bài ngẫu nhiên
+                    </button>
                   </div>
-                ))}
-              </div>
 
-              {/* All other videos history */}
-              <h4 style={{ marginBottom: '12px' }}>Lịch sử luyện tập</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
-                {reelsData.filter(v => progressData[selectedStudent.id]?.[v.id]?.status && progressData[selectedStudent.id]?.[v.id]?.status !== 'WAITING').map(video => {
-                  const status = progressData[selectedStudent.id]?.[v.id]?.status;
-                  let color = '#ccc';
-                  if (status === 'PASSED') color = '#4caf50';
-                  if (status === 'PRACTICING') color = '#ff9800';
-                  if (status === 'FAILED') color = '#f44336';
-                  return (
-                    <div key={video.id} onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: `2px solid ${color}`, opacity: 0.8 }}>
-                      <video src={video.videoUrl} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                  {/* Waiting for test */}
+                  <h4 style={{ color: '#1976d2', marginBottom: '12px' }}>Video đang chờ kiểm tra ({waitingVideos.length})</h4>
+                  {waitingVideos.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                      {waitingVideos.map(video => (
+                        <div key={video.id} onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: '2px solid #1976d2', position: 'relative', aspectRatio: '9/16' }}>
+                          <video src={video.videoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', color: 'white', padding: '8px', fontSize: '12px', textAlign: 'center' }}>Bấm để kiểm tra</div>
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  ) : (
+                    <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px', marginBottom: '32px', color: '#666', textAlign: 'center' }}>
+                      Chưa có video nào đang chờ kiểm tra
+                    </div>
+                  )}
+
+                  {/* All other videos history */}
+                  <h4 style={{ marginBottom: '12px' }}>Lịch sử luyện tập ({historyVideos.length})</h4>
+                  {historyVideos.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
+                      {historyVideos.map(video => {
+                        const status = studentProgress[video.id].status;
+                        let color = '#ccc';
+                        if (status === 'PASSED') color = '#4caf50';
+                        if (status === 'PRACTICING') color = '#ff9800';
+                        if (status === 'FAILED') color = '#f44336';
+                        return (
+                          <div key={video.id} onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: `3px solid ${color}`, opacity: 0.9 }}>
+                            <video src={video.videoUrl} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px', color: '#666', textAlign: 'center' }}>
+                      Chưa có lịch sử học tập
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           ) : (
             <div style={{ textAlign: 'center', color: '#777', padding: '60px 20px' }}>
               Hãy chọn một học sinh bên trái để xem hồ sơ và kiểm tra.
