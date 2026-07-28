@@ -15,22 +15,28 @@ function ReelCard({ data, progress, onClick }) {
   if (status === 'WAITING') statusColor = '#1976d2'; // blue
 
   return (
-    <div id={`reel-${data.id}`} className="reel-card" onClick={() => onClick(data)} style={{ border: status ? `3px solid ${statusColor}` : 'none' }}>
-      {data.image ? (
-        <img src={data.image} alt={data.title} loading="lazy" />
-      ) : data.videoUrl ? (
-        <video src={data.videoUrl} preload="metadata" muted playsInline style={{width: '100%', height: '100%', objectFit: 'contain'}} />
-      ) : null}
-      
-      {/* Status Badge */}
-      {status && (
-        <div style={{ position: 'absolute', top: 8, left: 8, background: statusColor, color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>
-          {status === 'PASSED' ? 'Đã đạt 100%' : status === 'PRACTICING' ? `Đang luyện tập (${streak}/5)` : status === 'FAILED' ? 'Chưa qua' : 'Đang chờ KT'}
-        </div>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div className="reel-card" onClick={() => onClick(data)} style={{ border: status ? `3px solid ${statusColor}` : 'none' }}>
+        {data.image ? (
+          <img src={data.image} alt={data.title} loading="lazy" />
+        ) : data.videoUrl ? (
+          <video src={data.videoUrl} preload="metadata" muted playsInline style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+        ) : null}
+        
+        {/* Status Badge */}
+        {status && (
+          <div style={{ position: 'absolute', top: 8, left: 8, background: statusColor, color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>
+            {status === 'PASSED' ? 'Đã đạt 100%' : status === 'PRACTICING' ? `Đang luyện tập (${streak}/5)` : status === 'FAILED' ? 'Chưa qua' : 'Đang chờ KT'}
+          </div>
+        )}
 
-      <div className="reel-card-overlay">
-        <div className="card-chinese">{data.title || `Video số ${data.id}`}</div>
+        <div className="reel-card-overlay">
+        </div>
+      </div>
+      
+      {/* Tên video nằm dưới */}
+      <div style={{ fontWeight: 'bold', fontSize: '18px', color: '#333', textAlign: 'center' }}>
+        {data.title || `Video số ${data.id}`}
       </div>
     </div>
   );
