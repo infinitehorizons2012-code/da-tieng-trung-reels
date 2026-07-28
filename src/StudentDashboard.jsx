@@ -127,6 +127,11 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick, use
         <ArrowLeft size={24} />
       </button>
       
+      {/* Tên video góc trên bên trái */}
+      <div style={{ position: 'absolute', top: '26px', left: '70px', color: '#ffd700', fontSize: '20px', fontWeight: 'bold', zIndex: 1010, textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
+        {data.title || `Video số ${data.id}`}
+      </div>
+      
       {/* Top Right Action Button */}
       <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 100 }}>
         {!onRegisterTest ? (
@@ -167,9 +172,8 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick, use
         )}
         
         <div className="viewer-info">
-          <div className="viewer-chinese">{data.title || `Video số ${data.id}`}</div>
-          <div className="viewer-pinyin">{data.pinyin}</div>
-          <div className="viewer-vietnamese">{data.vietnamese}</div>
+          {data.pinyin && <div className="viewer-pinyin">{data.pinyin}</div>}
+          {data.vietnamese && <div className="viewer-vietnamese">{data.vietnamese}</div>}
         </div>
       </div>
     </div>
