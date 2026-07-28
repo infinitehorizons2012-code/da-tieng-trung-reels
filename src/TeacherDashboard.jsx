@@ -46,13 +46,20 @@ function ReportView({ stats, progress, reels }) {
                     if (p.status === 'PRACTICING') { statusText = 'Đang luyện tập'; statusColor = '#ff9800'; }
                     if (p.status === 'FAILED') { statusText = 'Làm sai'; statusColor = '#f44336'; }
 
+                    const videoTab = video ? (video.tab || "1") : "1";
+                    const tabVideos = reels.filter(r => (r.tab || "1") === videoTab);
+                    const localIndex = video ? tabVideos.findIndex(r => r.id === video.id) : -1;
+                    
+                    const tabLabels = { "1": "Bé Trai", "2": "Bé Gái 1", "3": "Bé Gái 2", "4": "Người Nữ", "5": "Người Nam" };
+                    const tabName = tabLabels[videoTab] || `Tab ${videoTab}`;
+
                     return (
                       <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
                         <td style={{ padding: '12px' }}>
                           <div style={{ fontWeight: 'bold' }}>
                             {video ? (
                               <a href={video.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1976d2', textDecoration: 'none' }}>
-                                {video.title || `Video số ${video.id}`}
+                                {video.title || `[${tabName}] Video số ${localIndex + 1}`}
                               </a>
                             ) : 'Video đã xóa'}
                           </div>

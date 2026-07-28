@@ -32,6 +32,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
           VIDEO_URLS: ${{ toJson(github.event.client_payload.urls) }}
+          MESSAGE_TEXT: ${{ github.event.client_payload.text }}
           CHAT_ID: ${{ github.event.client_payload.chat_id }}
         run: |
           python scripts/add_videos.py

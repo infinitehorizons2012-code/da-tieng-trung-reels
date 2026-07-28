@@ -4,7 +4,7 @@ import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOu
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp, increment } from 'firebase/firestore';
 
-function ReelCard({ data, progress, onClick }) {
+function ReelCard({ data, progress, onClick, localIndex }) {
   const status = progress?.status;
   const streak = status === 'PASSED' ? 5 : (progress?.streak || 0);
 
@@ -16,7 +16,7 @@ function ReelCard({ data, progress, onClick }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-      <div className="reel-card" onClick={() => onClick(data)} style={{ border: status ? `3px solid ${statusColor}` : 'none' }}>
+      <div className="reel-card" onClick={() => onClick({...data, localIndex})} style={{ border: status ? `3px solid ${statusColor}` : 'none' }}>
         {data.image ? (
           <img src={data.image} alt={data.title} loading="lazy" />
         ) : data.videoUrl ? (
@@ -36,7 +36,7 @@ function ReelCard({ data, progress, onClick }) {
       
       {/* Tên video nằm dưới */}
       <div style={{ fontWeight: 'bold', fontSize: '18px', color: '#333', textAlign: 'center' }}>
-        {data.title || `Video số ${data.id}`}
+        {data.title || `Video số ${localIndex + 1}`}
       </div>
     </div>
   );
@@ -129,7 +129,7 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick, use
       
       {/* Tên video góc trên bên trái */}
       <div style={{ position: 'absolute', top: '26px', left: '70px', color: '#ffd700', fontSize: '20px', fontWeight: 'bold', zIndex: 1010, textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
-        {data.title || `Video số ${data.id}`}
+        {data.title || `Video số ${data.localIndex + 1}`}
       </div>
       
       {/* Top Right Action Button */}
@@ -188,6 +188,19 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
   const [showTeacherModal, setShowTeacherModal] = useState(false);
   const [teachersList, setTeachersList] = useState([]);
   const [selectedTeachers, setSelectedTeachers] = useState([]);
+  const [activeTab, setActiveTab] = useState("1");
+
+  // Get unique tabs
+  const tabs = [...new Set(reelsData.map(r => r.tab || "1"))].sort();
+  const filteredReels = reelsData.filter(r => (r.tab || "1") === activeTab);
+
+  const tabLabels = {
+    "1": "Bé Trai",
+    "2": "Bé Gái 1",
+    "3": "Bé Gái 2",
+    "4": "Người Nữ",
+    "5": "Người Nam",
+  };
 
   useEffect(() => {
     if (user) {
@@ -331,11 +344,37 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
         </div>
       </header>
 
+      {/* Tabs Bar */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '20px 0', padding: '0 20px', overflowX: 'auto' }}>
+        {tabs.map(tabId => (
+          <button 
+            key={tabId}
+            onClick={() => setActiveTab(tabId)}
+            style={{ 
+              padding: '10px 24px', 
+              borderRadius: '24px', 
+              border: 'none', 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              background: activeTab === tabId ? '#1976d2' : '#e0e0e0',
+              color: activeTab === tabId ? 'white' : '#555',
+              boxShadow: activeTab === tabId ? '0 4px 8px rgba(25, 118, 210, 0.3)' : 'none',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            {tabLabels[tabId] || `Tab ${tabId}`}
+          </button>
+        ))}
+      </div>
+
       <main className="reels-grid">
-        {reelsData.map((reel) => (
+        {filteredReels.map((reel, index) => (
           <ReelCard 
             key={reel.id} 
             data={reel}
+            localIndex={index}
             progress={user ? progressData[reel.id] : null}
             onClick={setSelectedReel} 
           />

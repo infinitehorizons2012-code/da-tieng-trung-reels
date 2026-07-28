@@ -11,11 +11,16 @@ from datetime import datetime
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL') # Format: cloudinary://apikey:apisecret@cloudname
 VIDEO_URLS_STR = os.environ.get('VIDEO_URLS', '[]')
+MESSAGE_TEXT = os.environ.get('MESSAGE_TEXT', '')
 CHAT_ID = os.environ.get('CHAT_ID')
 
 if not TELEGRAM_TOKEN:
     print("No TELEGRAM_TOKEN found.")
     exit(0)
+
+# Lấy tab ID từ đầu tin nhắn (vd: '2 https://...')
+tab_match = re.match(r'^\s*(\d+)', MESSAGE_TEXT)
+tab_id = tab_match.group(1) if tab_match else "1"
 
 # Configure Cloudinary if URL is provided
 if CLOUDINARY_URL:
@@ -95,6 +100,7 @@ for video_url in urls:
         
         entry = f"""  {{
     id: {next_id},
+    tab: "{tab_id}",
     title: "",
     pinyin: "",
     vietnamese: "",
@@ -107,7 +113,7 @@ for video_url in urls:
         
         log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), video_url, "Success", final_url])
         
-        send_telegram_msg(CHAT_ID, f"✅ Đã thêm Video số {next_id} thành công vào hệ thống!\nVideo sẽ xuất hiện trên web sau khoảng 1-2 phút.")
+        send_telegram_msg(CHAT_ID, f"✅ Đã thêm Video thành công vào **Tab {tab_id}**!\nVideo sẽ xuất hiện trên web sau khoảng 1-2 phút.")
         next_id += 1
         
         os.remove(downloaded_file)
