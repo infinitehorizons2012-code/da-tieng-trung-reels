@@ -10,6 +10,8 @@ from datetime import datetime
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL') # Format: cloudinary://apikey:apisecret@cloudname
+VIDEO_URLS_STR = os.environ.get('VIDEO_URLS', '[]')
+CHAT_ID = os.environ.get('CHAT_ID')
 
 if not TELEGRAM_TOKEN:
     print("No TELEGRAM_TOKEN found.")
@@ -26,47 +28,22 @@ def send_telegram_msg(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     requests.post(url, json={'chat_id': chat_id, 'text': text})
 
-# 1. Lấy tin nhắn mới từ Telegram (Polling)
-url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates"
-offset = 0
+# Phân tích danh sách URL từ Webhook
 try:
-    with open('scripts/telegram_offset.txt', 'r') as f:
-        offset = int(f.read().strip())
+    urls = json.loads(VIDEO_URLS_STR)
 except:
-    pass
+    # Fallback to string matching if JSON fails
+    urls = re.findall(r'(https?://[^\s\'"\[\],]+)', VIDEO_URLS_STR)
 
-res = requests.get(url, params={'offset': offset, 'timeout': 10})
-data = res.json()
-
-if not data.get('ok') or not data.get('result'):
-    print("No new updates from Telegram.")
+if not urls or not CHAT_ID:
+    print("No URLs or CHAT_ID found in payload.")
     exit(0)
 
-new_offset = offset
-videos_to_process = []
-
-for update in data['result']:
-    new_offset = max(new_offset, update['update_id'] + 1)
-    if 'message' in update and 'text' in update['message']:
-        text = update['message']['text']
-        chat_id = update['message']['chat']['id']
-        # Tìm tất cả các link web trong tin nhắn
-        urls = re.findall(r'(https?://[^\s]+)', text)
-        for u in urls:
-            videos_to_process.append({'url': u, 'chat_id': chat_id})
-
-if not videos_to_process:
-    # Cập nhật offset nếu có tin nhắn nhưng không chứa link
-    with open('scripts/telegram_offset.txt', 'w') as f:
-        f.write(str(new_offset))
-    exit(0)
-
-print(f"Found {len(videos_to_process)} videos to process.")
+print(f"Found {len(urls)} videos to process.")
 
 # Hàm tải video bằng yt-dlp
 def download_video(url, output_path="temp_video.mp4"):
     try:
-        # Cố gắng xóa file cũ nếu còn tồn tại
         if os.path.exists(output_path):
             os.remove(output_path)
             
@@ -91,28 +68,24 @@ except FileNotFoundError:
     print("data.js not found!")
     exit(1)
 
-# Lấy các ID hiện có
 ids = re.findall(r'id:\s*(\d+)', data_js_content)
 next_id = max([int(i) for i in ids]) + 1 if ids else 1
 
 new_entries = []
 log_entries = []
 
-for item in videos_to_process:
-    video_url = item['url']
-    chat_id = item['chat_id']
-    send_telegram_msg(chat_id, f"Đang bắt đầu xử lý video: {video_url}")
+for video_url in urls:
+    send_telegram_msg(CHAT_ID, f"Đang bắt đầu xử lý video: {video_url}")
     
     downloaded_file = download_video(video_url)
     
     if not downloaded_file:
-        send_telegram_msg(chat_id, f"Lỗi: Không thể tải video từ link {video_url}")
+        send_telegram_msg(CHAT_ID, f"Lỗi: Không thể tải video từ link {video_url}")
         log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), video_url, "Failed Download", ""])
         continue
         
     try:
-        send_telegram_msg(chat_id, "Đang tải video lên Cloudinary...")
-        # Upload lên Cloudinary thư mục da-tieng-trung
+        send_telegram_msg(CHAT_ID, "Đang tải video lên Cloudinary...")
         upload_result = cloudinary.uploader.upload(
             downloaded_file, 
             resource_type="video", 
@@ -120,7 +93,6 @@ for item in videos_to_process:
         )
         final_url = upload_result.get('secure_url')
         
-        # Tạo entry cho data.js
         entry = f"""  {{
     id: {next_id},
     title: "",
@@ -133,32 +105,27 @@ for item in videos_to_process:
   }}"""
         new_entries.append(entry)
         
-        # Cập nhật log
         log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), video_url, "Success", final_url])
         
-        send_telegram_msg(chat_id, f"✅ Đã thêm Video số {next_id} thành công vào hệ thống!\nVideo sẽ xuất hiện trên web sau khoảng 1-2 phút.")
+        send_telegram_msg(CHAT_ID, f"✅ Đã thêm Video số {next_id} thành công vào hệ thống!\nVideo sẽ xuất hiện trên web sau khoảng 1-2 phút.")
         next_id += 1
         
-        # Xóa file tạm
         os.remove(downloaded_file)
         
     except Exception as e:
         print(f"Error uploading to Cloudinary: {str(e)}")
-        send_telegram_msg(chat_id, f"Lỗi: Không thể đẩy lên Cloudinary - {str(e)}")
+        send_telegram_msg(CHAT_ID, f"Lỗi: Không thể đẩy lên Cloudinary - {str(e)}")
         log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), video_url, "Failed Upload", str(e)])
 
-
-# Nếu có video mới, cập nhật data.js
+# Cập nhật data.js
 if new_entries:
-    # Tìm đoạn cuối mảng trong data.js: "];"
     new_data_str = ",\n" + ",\n".join(new_entries) + "\n];"
     updated_content = re.sub(r'\n\];$', new_data_str, data_js_content, count=1)
     
-    # Ghi lại data.js
     with open(data_js_path, 'w', encoding='utf-8') as f:
         f.write(updated_content)
 
-# Ghi nhật ký tải video
+# Ghi log
 csv_path = 'video_log.csv'
 file_exists = os.path.exists(csv_path)
 with open(csv_path, 'a', newline='', encoding='utf-8') as f:
@@ -167,7 +134,3 @@ with open(csv_path, 'a', newline='', encoding='utf-8') as f:
         writer.writerow(['Thời gian', 'Link gốc', 'Trạng thái', 'Link Cloudinary (Web)'])
     for row in log_entries:
         writer.writerow(row)
-
-# Cuối cùng, cập nhật offset để không xử lý lại tin nhắn cũ
-with open('scripts/telegram_offset.txt', 'w') as f:
-    f.write(str(new_offset))
