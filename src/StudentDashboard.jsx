@@ -37,7 +37,7 @@ function ReelCard({ data, status, onClick }) {
   );
 }
 
-function ReelViewer({ data, status, onClose, onRegisterTest }) {
+function ReelViewer({ data, status, onClose, onRegisterTest, onLoginClick }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -49,6 +49,7 @@ function ReelViewer({ data, status, onClose, onRegisterTest }) {
   const [registering, setRegistering] = useState(false);
 
   const handleRegister = async () => {
+    if (!onRegisterTest) return;
     setRegistering(true);
     await onRegisterTest(data.id);
     setRegistering(false);
@@ -73,7 +74,11 @@ function ReelViewer({ data, status, onClose, onRegisterTest }) {
           <div className="viewer-vietnamese">{data.vietnamese}</div>
           
           <div style={{ marginTop: '16px' }}>
-            {status === 'WAITING' ? (
+            {!onRegisterTest ? (
+              <button onClick={onLoginClick} style={{ background: '#ff4081', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Đăng nhập để lưu tiến độ
+              </button>
+            ) : status === 'WAITING' ? (
               <button disabled style={{ background: '#1976d2', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold' }}>
                 Đã đăng ký kiểm tra
               </button>
@@ -111,17 +116,20 @@ function ReelViewer({ data, status, onClose, onRegisterTest }) {
   );
 }
 
-export default function StudentDashboard({ user, onLogout }) {
+export default function StudentDashboard({ user, onLogout, onLoginClick }) {
   const [selectedReel, setSelectedReel] = useState(null);
   const [progressData, setProgressData] = useState({});
   const [leaderboard, setLeaderboard] = useState([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   useEffect(() => {
-    fetchProgress();
-  }, [user.id]);
+    if (user) {
+      fetchProgress();
+    }
+  }, [user?.id]);
 
   const fetchProgress = async () => {
+    if (!user) return;
     try {
       const q = query(collection(db, 'progress'), where('userId', '==', user.id));
       const snapshot = await getDocs(q);
@@ -162,6 +170,7 @@ export default function StudentDashboard({ user, onLogout }) {
   };
 
   const handleRegisterTest = async (videoId) => {
+    if (!user) return;
     try {
       const docId = `${user.id}_${videoId}`;
       await setDoc(doc(db, 'progress', docId), {
@@ -191,15 +200,23 @@ export default function StudentDashboard({ user, onLogout }) {
       <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>
           <img src="https://images.unsplash.com/photo-1590845947698-8924d7409b56?w=100&h=100&fit=crop" alt="Avatar" className="avatar" />
-          Xin chào, {user.name}!
+          {user ? `Xin chào, ${user.name}!` : 'Xin chào, Khách!'}
         </h1>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={fetchLeaderboard} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff9c4', color: '#fbc02d', border: '1px solid #fbc02d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-            <Trophy size={18} /> Bảng Vàng
-          </button>
-          <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
-            <LogOut size={18} /> Thoát
-          </button>
+          {user ? (
+            <>
+              <button onClick={fetchLeaderboard} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff9c4', color: '#fbc02d', border: '1px solid #fbc02d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <Trophy size={18} /> Bảng Vàng
+              </button>
+              <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+                <LogOut size={18} /> Thoát
+              </button>
+            </>
+          ) : (
+            <button onClick={onLoginClick} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e3f2fd', color: '#1976d2', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+              Đăng nhập
+            </button>
+          )}
         </div>
       </header>
 
@@ -208,7 +225,7 @@ export default function StudentDashboard({ user, onLogout }) {
           <ReelCard 
             key={reel.id} 
             data={reel}
-            status={progressData[reel.id]}
+            status={user ? progressData[reel.id] : null}
             onClick={setSelectedReel} 
           />
         ))}
@@ -217,9 +234,10 @@ export default function StudentDashboard({ user, onLogout }) {
       {selectedReel && (
         <ReelViewer 
           data={selectedReel}
-          status={progressData[selectedReel.id]}
+          status={user ? progressData[selectedReel.id] : null}
           onClose={handleClose}
-          onRegisterTest={handleRegisterTest}
+          onRegisterTest={user ? handleRegisterTest : null}
+          onLoginClick={onLoginClick}
         />
       )}
 

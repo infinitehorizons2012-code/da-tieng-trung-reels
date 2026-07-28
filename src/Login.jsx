@@ -3,7 +3,7 @@ import { db } from './firebase';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { User, Lock, UserPlus, LogIn } from 'lucide-react';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onCancel }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
@@ -78,7 +78,15 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f2f5', position: 'relative' }}>
+      {onCancel && (
+        <button 
+          onClick={onCancel}
+          style={{ position: 'absolute', top: '20px', left: '20px', padding: '10px 16px', background: 'white', border: '1px solid #ccc', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          &larr; Quay lại trang chủ
+        </button>
+      )}
       <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
           {isRegistering ? <><UserPlus /> Đăng ký tài khoản</> : <><LogIn /> Đăng nhập</>}

@@ -7,6 +7,7 @@ import './index.css';
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -28,13 +29,16 @@ export default function App() {
 
   if (loading) return null;
 
-  if (!user) {
-    return <Login onLogin={(u) => setUser(u)} />;
+  if (showLogin) {
+    return <Login 
+      onLogin={(u) => { setUser(u); setShowLogin(false); }} 
+      onCancel={() => setShowLogin(false)} 
+    />;
   }
 
-  if (user.role === 'teacher') {
+  if (user?.role === 'teacher') {
     return <TeacherDashboard user={user} onLogout={handleLogout} />;
   }
 
-  return <StudentDashboard user={user} onLogout={handleLogout} />;
+  return <StudentDashboard user={user} onLogout={handleLogout} onLoginClick={() => setShowLogin(true)} />;
 }
