@@ -288,13 +288,13 @@ export default function TeacherDashboard({ user, onLogout }) {
 
       {/* Testing Modal */}
       {testingVideo && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <button onClick={() => setTestingVideo(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', cursor: 'pointer', color: 'white', zIndex: 1001 }}>
              <X size={32} />
           </button>
           
           <div 
-            style={{ flex: 1, position: 'relative', background: '#000', cursor: 'pointer' }}
+            style={{ height: '50vh', maxWidth: '400px', width: '100%', position: 'relative', background: '#000', cursor: 'pointer', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}
             onClick={() => {
               const video = document.getElementById('teacher-video');
               if (video) {
@@ -312,10 +312,10 @@ export default function TeacherDashboard({ user, onLogout }) {
             />
           </div>
 
-          <div style={{ color: 'white', textAlign: 'center', marginBottom: '24px' }}>
-             <h2 style={{ fontFamily: '"ZCOOL KuaiLe", cursive', color: '#FFD700' }}>{testingVideo.title}</h2>
-             <p style={{ fontSize: '20px' }}>{testingVideo.pinyin}</p>
-             <p>{testingVideo.vietnamese}</p>
+          <div style={{ color: 'white', textAlign: 'center', marginBottom: '24px', maxWidth: '600px' }}>
+             <h2 style={{ fontFamily: '"ZCOOL KuaiLe", cursive', color: '#FFD700', marginBottom: '8px' }}>{testingVideo.title}</h2>
+             <p style={{ fontSize: '24px', marginBottom: '8px' }}>{testingVideo.pinyin}</p>
+             <p style={{ fontSize: '18px' }}>{testingVideo.vietnamese}</p>
              
              {(() => {
                 const currentProgress = progressData[selectedStudent.id]?.[testingVideo.id] || {};
@@ -324,11 +324,11 @@ export default function TeacherDashboard({ user, onLogout }) {
              })()}
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button onClick={() => handleGrade(testingVideo.id, true)} style={{ background: '#4caf50', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '8px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button onClick={() => handleGrade(testingVideo.id, true)} style={{ background: '#4caf50', color: 'white', border: '2px solid white', padding: '16px 40px', borderRadius: '50px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)' }}>
                <CheckCircle size={28} /> ĐÚNG
             </button>
-            <button onClick={() => handleGrade(testingVideo.id, false)} style={{ background: '#f44336', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '8px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button onClick={() => handleGrade(testingVideo.id, false)} style={{ background: '#f44336', color: 'white', border: '2px solid white', padding: '16px 40px', borderRadius: '50px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(244, 67, 54, 0.4)' }}>
                <XCircle size={28} /> SAI
             </button>
           </div>
