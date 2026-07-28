@@ -68,6 +68,29 @@ export default function TeacherDashboard({ user, onLogout }) {
     return { waiting, passed, practicing, failed, total: passed + practicing + failed + waiting };
   };
 
+  const handleDeleteProgress = async (videoId) => {
+    if (!selectedStudent) return;
+    if (!window.confirm("Bạn có chắc muốn xóa video này khỏi lịch sử của học sinh?")) return;
+    
+    try {
+      const docId = `${selectedStudent.id}_${videoId}`;
+      await deleteDoc(doc(db, 'progress', docId));
+      
+      // Update local state
+      setProgressData(prev => {
+        const newStudentData = { ...prev[selectedStudent.id] };
+        delete newStudentData[videoId];
+        return {
+          ...prev,
+          [selectedStudent.id]: newStudentData
+        };
+      });
+    } catch (err) {
+      alert("Lỗi khi xóa!");
+      console.error(err);
+    }
+  };
+
   const handleGrade = async (videoId, isCorrect) => {
     if (!selectedStudent) return;
     try {
