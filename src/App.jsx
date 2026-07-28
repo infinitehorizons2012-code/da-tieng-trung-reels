@@ -9,7 +9,7 @@ function ReelCard({ data, onClick }) {
       {data.image ? (
         <img src={data.image} alt={data.title} loading="lazy" />
       ) : data.videoUrl ? (
-        <video src={data.videoUrl} preload="metadata" muted playsInline style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+        <video src={data.videoUrl} preload="metadata" muted playsInline style={{width: '100%', height: '100%', objectFit: 'contain'}} />
       ) : null}
       <div className="reel-card-overlay">
         <div className="card-chinese">{data.title}</div>
