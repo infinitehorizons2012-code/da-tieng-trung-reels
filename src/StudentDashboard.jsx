@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { reelsData } from './data';
 import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users } from 'lucide-react';
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
