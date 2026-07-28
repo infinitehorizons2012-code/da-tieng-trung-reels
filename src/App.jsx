@@ -5,7 +5,7 @@ import './index.css';
 
 function ReelCard({ data, onClick }) {
   return (
-    <div className="reel-card" onClick={() => onClick(data)}>
+    <div id={`reel-${data.id}`} className="reel-card" onClick={() => onClick(data)}>
       {data.image ? (
         <img src={data.image} alt={data.title} loading="lazy" />
       ) : data.videoUrl ? (
@@ -79,6 +79,17 @@ function ReelViewer({ data, onClose }) {
 function App() {
   const [selectedReel, setSelectedReel] = useState(null);
 
+  const handleClose = () => {
+    const closedId = selectedReel.id;
+    setSelectedReel(null);
+    setTimeout(() => {
+      const el = document.getElementById(`reel-${closedId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  };
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -108,7 +119,7 @@ function App() {
       {selectedReel && (
         <ReelViewer 
           data={selectedReel} 
-          onClose={() => setSelectedReel(null)} 
+          onClose={handleClose} 
         />
       )}
     </div>
