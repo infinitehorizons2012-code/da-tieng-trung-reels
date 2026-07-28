@@ -1,19 +1,19 @@
 import os
 import json
 import subprocess
+import re
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-import urllib.parse
-import re
+import cloudinary
+import cloudinary.uploader
 
 # --- CẤU HÌNH ---
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SERVICE_ACCOUNT_FILE = 'service_account.json'
 SPREADSHEET_ID = os.environ.get('SHEET_ID')
-DRIVE_FOLDER_ID = os.environ.get('DRIVE_FOLDER_ID')
 
-# Hàm lấy ID video từ file chạy
+# Lưu ý: CLOUDINARY_URL sẽ tự động được thư viện cloudinary nhận diện từ biến môi trường
+
 def get_max_id(data_content):
     ids = re.findall(r'id:\s*(\d+)', data_content)
     if not ids:
@@ -21,11 +21,11 @@ def get_max_id(data_content):
     return max(int(id) for id in ids)
 
 def main():
-    if not SPREADSHEET_ID or not DRIVE_FOLDER_ID:
-        print("Lỗi: Thiếu SHEET_ID hoặc DRIVE_FOLDER_ID trong môi trường.")
+    if not SPREADSHEET_ID:
+        print("Lỗi: Thiếu SHEET_ID trong môi trường.")
         return
 
-    # 1. Khởi tạo Google API credentials
+    # 1. Khởi tạo Google API credentials (Chỉ cần cho Sheets)
     creds_json = os.environ.get('GOOGLE_CREDENTIALS')
     if not creds_json:
         print("Lỗi: Thiếu GOOGLE_CREDENTIALS.")
@@ -38,7 +38,6 @@ def main():
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
         
     sheets_service = build('sheets', 'v4', credentials=creds)
-    drive_service = build('drive', 'v3', credentials=creds)
 
     # 2. Đọc dữ liệu từ Google Sheet (Sheet1)
     sheet = sheets_service.spreadsheets()
@@ -64,8 +63,6 @@ def main():
     updates = []
     
     for row_idx, row in enumerate(values):
-        # Cấu trúc: [Link Video, Tiêu đề (Hán), Pinyin, Tiếng Việt, Lượt xem ảo, Tim ảo, Trạng thái]
-        # Bổ sung các cột nếu thiếu
         row.extend([''] * (7 - len(row)))
         link, title, pinyin, vi, views, likes, status = row[:7]
         
@@ -80,7 +77,6 @@ def main():
             subprocess.run(['yt-dlp', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4', '-o', file_name, link], check=True)
         except Exception as e:
             print(f"Lỗi tải video {link}: {e}")
-            # Thử lại tải chất lượng cơ bản
             try:
                 subprocess.run(['yt-dlp', '-o', file_name, link], check=True)
             except:
@@ -90,25 +86,30 @@ def main():
         if not os.path.exists(file_name):
             continue
 
-        # Tạo thư mục public/videos nếu chưa có
-        os.makedirs('public/videos', exist_ok=True)
+        # 4. Upload lên Cloudinary
+        print("Đang tải lên Cloudinary...")
+        try:
+            # resource_type="video" là bắt buộc đối với file mp4
+            upload_result = cloudinary.uploader.upload(file_name, resource_type="video", folder="da-tieng-trung")
+            direct_link = upload_result.get('secure_url')
+            print(f"Tải lên thành công: {direct_link}")
+        except Exception as e:
+            print(f"Lỗi upload Cloudinary: {e}")
+            os.remove(file_name)
+            continue
         
-        # Di chuyển file vào public/videos
-        new_file_name = f"public/videos/video_{current_id + 1}.mp4"
-        os.rename(file_name, new_file_name)
+        # Xóa file local sau khi upload
+        os.remove(file_name)
         
         # 5. Cập nhật trạng thái
-        row_number = row_idx + 2 # Do lấy từ A2
+        row_number = row_idx + 2
         updates.append({
             'range': f'Sheet1!G{row_number}',
             'values': [['Done']]
         })
         
-        # Tạo object để thêm vào data.js
         current_id += 1
-        direct_link = f"videos/video_{current_id}.mp4"
         
-        # Nếu chưa có view/likes, tạo mặc định
         if not views: views = "1,2K"
         if not likes: likes = "500"
         
@@ -132,10 +133,8 @@ def main():
 
     # 7. Cập nhật file src/data.js
     if new_videos:
-        # Tìm vị trí ngoặc vuông đóng cuối cùng
         last_bracket = data_content.rfind(']')
         if last_bracket != -1:
-            # Nếu mảng đang rỗng thì không cần dấu phẩy
             needs_comma = "{" in data_content[:last_bracket]
             
             insert_str = ""
@@ -148,7 +147,6 @@ def main():
                 f.write(new_content)
             print("Đã cập nhật src/data.js")
             
-    # Cleanup
     if os.path.exists(SERVICE_ACCOUNT_FILE):
         os.remove(SERVICE_ACCOUNT_FILE)
 
