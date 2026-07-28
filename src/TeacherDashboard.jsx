@@ -184,7 +184,9 @@ export default function TeacherDashboard({ user, onLogout }) {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{student.name}</div>
+                  <div style={{ fontWeight: 'bold', fontSize: '18px' }}>
+                    {student.name} <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666' }}>(PIN: {student.pin})</span>
+                  </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.id, student.name); }}
                     style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', padding: '4px' }}
