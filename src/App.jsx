@@ -36,7 +36,11 @@ function ReelViewer({ data, onClose }) {
       </button>
       
       <div className="viewer-content">
-        <img src={data.image} alt={data.title} />
+        {data.videoUrl ? (
+          <video src={data.videoUrl} autoPlay loop playsInline controls={false} />
+        ) : (
+          <img src={data.image} alt={data.title} />
+        )}
         
         {/* Overlay Info */}
         <div className="viewer-info">
