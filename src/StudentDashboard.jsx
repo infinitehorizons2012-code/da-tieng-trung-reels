@@ -92,6 +92,31 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
         <ArrowLeft size={24} />
       </button>
       
+      {/* Top Right Action Button */}
+      <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 100 }}>
+        {!onRegisterTest ? (
+          <button onClick={onLoginClick} style={{ background: '#ff4081', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+            Đăng nhập để lưu tiến độ
+          </button>
+        ) : status === 'WAITING' ? (
+          <button disabled style={{ background: '#1976d2', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '20px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+            Đã đăng ký kiểm tra
+          </button>
+        ) : status === 'PASSED' ? (
+          <button disabled style={{ background: '#4caf50', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '20px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+            <CheckCircle size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Đã thuộc 100%
+          </button>
+        ) : status === 'PRACTICING' ? (
+          <button onClick={handleRegister} disabled={registering} style={{ background: '#ff9800', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+            {registering ? 'Đang đăng ký...' : `Tiếp tục luyện tập (${streak}/5)`}
+          </button>
+        ) : (
+          <button onClick={handleRegister} disabled={registering} style={{ background: '#ff4081', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+            {registering ? 'Đang đăng ký...' : 'Đăng ký kiểm tra'}
+          </button>
+        )}
+      </div>
+
       <div className="viewer-content">
         {data.videoUrl ? (
           <div style={{ position: 'relative', width: '100%', height: '100%' }} onClick={togglePlay}>
@@ -110,48 +135,6 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
           <div className="viewer-chinese">{data.title}</div>
           <div className="viewer-pinyin">{data.pinyin}</div>
           <div className="viewer-vietnamese">{data.vietnamese}</div>
-          
-          <div style={{ marginTop: '16px' }}>
-            {!onRegisterTest ? (
-              <button onClick={onLoginClick} style={{ background: '#ff4081', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
-                Đăng nhập để lưu tiến độ
-              </button>
-            ) : status === 'WAITING' ? (
-              <button disabled style={{ background: '#1976d2', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold' }}>
-                Đã đăng ký kiểm tra
-              </button>
-            ) : status === 'PASSED' ? (
-              <button disabled style={{ background: '#4caf50', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold' }}>
-                <CheckCircle size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Đã thuộc 100%
-              </button>
-            ) : status === 'PRACTICING' ? (
-              <button onClick={handleRegister} disabled={registering} style={{ background: '#ff9800', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
-                {registering ? 'Đang đăng ký...' : `Tiếp tục luyện tập (${streak}/5)`}
-              </button>
-            ) : (
-              <button onClick={handleRegister} disabled={registering} style={{ background: '#ff4081', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
-                {registering ? 'Đang đăng ký...' : 'Đăng ký kiểm tra'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="viewer-actions">
-          <button className="action-btn" onClick={() => setLiked(!liked)}>
-            <Heart size={32} fill={liked ? "#ff2a5f" : "none"} color={liked ? "#ff2a5f" : "white"} />
-            <span>{data.likes}</span>
-          </button>
-          <button className="action-btn">
-            <MessageCircle size={32} />
-            <span>Bình luận</span>
-          </button>
-          <button className="action-btn">
-            <Share2 size={32} />
-            <span>Chia sẻ</span>
-          </button>
-          <button className="action-btn">
-            <MoreHorizontal size={32} />
-          </button>
         </div>
       </div>
     </div>
