@@ -6,7 +6,11 @@ import './index.css';
 function ReelCard({ data, onClick }) {
   return (
     <div className="reel-card" onClick={() => onClick(data)}>
-      <img src={data.image} alt={data.title} loading="lazy" />
+      {data.image ? (
+        <img src={data.image} alt={data.title} loading="lazy" />
+      ) : data.videoUrl ? (
+        <video src={data.videoUrl} preload="metadata" muted playsInline style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+      ) : null}
       <div className="reel-card-overlay">
         <div className="card-chinese">{data.title}</div>
         <div className="card-views">
