@@ -86,7 +86,7 @@ for video_url in urls:
     
     if not downloaded_file:
         send_telegram_msg(CHAT_ID, f"Lỗi: Không thể tải video từ link {video_url}")
-        log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), video_url, "Failed Download", ""])
+        log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), tab_id, video_url, "Failed Download", ""])
         continue
         
     try:
@@ -111,7 +111,7 @@ for video_url in urls:
   }}"""
         new_entries.append(entry)
         
-        log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), video_url, "Success", final_url])
+        log_entries.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), tab_id, video_url, "Success", final_url])
         
         send_telegram_msg(CHAT_ID, f"✅ Đã thêm Video thành công vào **Tab {tab_id}**!\nVideo sẽ xuất hiện trên web sau khoảng 1-2 phút.")
         next_id += 1
