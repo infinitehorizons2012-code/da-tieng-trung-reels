@@ -165,12 +165,12 @@ body {
 .viewer-content img, .viewer-content video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .viewer-info {
   position: absolute;
-  bottom: 40px;
+  bottom: 80px;
   left: 20px;
   right: 80px;
   color: white;
@@ -201,7 +201,7 @@ body {
 
 .viewer-actions {
   position: absolute;
-  bottom: 40px;
+  bottom: 80px;
   right: 16px;
   display: flex;
   flex-direction: column;
