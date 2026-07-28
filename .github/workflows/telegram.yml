@@ -1,0 +1,43 @@
+name: Telegram Bot Worker
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Chạy mỗi 5 phút
+  workflow_dispatch: # Cho phép bấm chạy thủ công
+
+jobs:
+  process_telegram:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Để có thể commit và push lên nhánh main
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r scripts/requirements.txt
+          
+      - name: Install ffmpeg (required by yt-dlp)
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Run Telegram Bot Script
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+        run: |
+          python scripts/add_videos.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add scripts/telegram_offset.txt src/data.js video_log.csv || true
+          git commit -m "Auto-add new videos from Telegram" || echo "No changes to commit"
+          git push
