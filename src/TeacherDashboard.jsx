@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { LogOut, CheckCircle, Clock, XCircle, Users, Play, X } from 'lucide-react';
+import { collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { LogOut, CheckCircle, Clock, XCircle, Users, Play, X, Trash2 } from 'lucide-react';
 import { reelsData } from './data';
 
 export default function TeacherDashboard({ user, onLogout }) {
@@ -38,6 +38,20 @@ export default function TeacherDashboard({ user, onLogout }) {
       console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleDeleteStudent = async (studentId, studentName) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản học sinh "${studentName}" không?`)) {
+      try {
+        await deleteDoc(doc(db, 'users', studentId));
+        setStudents(students.filter(s => s.id !== studentId));
+        if (selectedStudent?.id === studentId) setSelectedStudent(null);
+        alert('Đã xóa tài khoản thành công!');
+      } catch (err) {
+        console.error(err);
+        alert('Có lỗi xảy ra khi xóa!');
+      }
+    }
   };
 
   const getStudentStats = (studentId) => {
@@ -126,7 +140,16 @@ export default function TeacherDashboard({ user, onLogout }) {
                   background: isSelected ? '#f0f8ff' : 'white'
                 }}
               >
-                <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '8px' }}>{student.name}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{student.name}</div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.id, student.name); }}
+                    style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', padding: '4px' }}
+                    title="Xóa học sinh này"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
                 <div style={{ display: 'flex', gap: '8px', fontSize: '12px', flexWrap: 'wrap' }}>
                   {stats.waiting > 0 && <span style={{ background: '#e3f2fd', color: '#1976d2', padding: '2px 8px', borderRadius: '12px' }}>{stats.waiting} Đăng ký chờ</span>}
                   <span style={{ background: '#e8f5e9', color: '#388e3c', padding: '2px 8px', borderRadius: '12px' }}>{stats.passed} Đạt 100%</span>
