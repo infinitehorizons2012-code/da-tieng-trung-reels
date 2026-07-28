@@ -49,7 +49,7 @@ function ReportView({ stats, progress, reels }) {
                     return (
                       <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
                         <td style={{ padding: '12px' }}>
-                          <div style={{ fontWeight: 'bold' }}>{video ? video.title : 'Video đã xóa'}</div>
+                          <div style={{ fontWeight: 'bold' }}>{video ? (video.title || `Video số ${video.id}`) : 'Video đã xóa'}</div>
                           <div style={{ fontSize: '12px', color: '#666' }}>{video ? video.vietnamese : ''}</div>
                         </td>
                         <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1976d2', fontSize: '16px' }}>{s.clicks || 0}</td>
