@@ -235,7 +235,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
           <ReelCard 
             key={reel.id} 
             data={reel}
-            status={user ? progressData[reel.id] : null}
+            progress={user ? progressData[reel.id] : null}
             onClick={setSelectedReel} 
           />
         ))}
@@ -244,7 +244,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
       {selectedReel && (
         <ReelViewer 
           data={selectedReel}
-          status={user ? progressData[selectedReel.id] : null}
+          progress={user ? progressData[selectedReel.id] : null}
           onClose={handleClose}
           onRegisterTest={user ? handleRegisterTest : null}
           onLoginClick={onLoginClick}
