@@ -90,23 +90,12 @@ def main():
         if not os.path.exists(file_name):
             continue
 
-        # 4. Upload lên Google Drive
-        file_metadata = {
-            'name': f"{title}.mp4",
-            'parents': [DRIVE_FOLDER_ID]
-        }
-        media = MediaFileUpload(file_name, mimetype='video/mp4', resumable=True)
-        file = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        # Tạo thư mục public/videos nếu chưa có
+        os.makedirs('public/videos', exist_ok=True)
         
-        drive_file_id = file.get('id')
-        print(f"Đã upload thành công lên Drive, ID: {drive_file_id}")
-        
-        # Set quyền public để ai cũng xem được (web stream được)
-        drive_service.permissions().create(
-            fileId=drive_file_id,
-            body={'type': 'anyone', 'role': 'reader'},
-            fields='id'
-        ).execute()
+        # Di chuyển file vào public/videos
+        new_file_name = f"public/videos/video_{current_id + 1}.mp4"
+        os.rename(file_name, new_file_name)
         
         # 5. Cập nhật trạng thái
         row_number = row_idx + 2 # Do lấy từ A2
@@ -115,12 +104,9 @@ def main():
             'values': [['Done']]
         })
         
-        # Xóa file local
-        os.remove(file_name)
-        
         # Tạo object để thêm vào data.js
         current_id += 1
-        direct_link = f"https://drive.google.com/uc?export=download&id={drive_file_id}"
+        direct_link = f"videos/video_{current_id}.mp4"
         
         # Nếu chưa có view/likes, tạo mặc định
         if not views: views = "1,2K"
