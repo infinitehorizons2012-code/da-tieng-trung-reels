@@ -23,8 +23,7 @@ export default function TeacherDashboard({ user, onLogout }) {
       const snapshot = await getDocs(q);
       const studentsList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       const filteredStudents = studentsList.filter(s => {
-        if (!s.teacherIds || s.teacherIds.length === 0) return true; // Hiển thị học sinh cũ
-        return s.teacherIds.includes(user.id);
+        return s.teacherIds && s.teacherIds.includes(user.id);
       });
       setStudents(filteredStudents);
 
