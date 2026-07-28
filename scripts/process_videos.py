@@ -67,6 +67,7 @@ def main():
         link, title, pinyin, vi, views, likes, status = row[:7]
         
         if status.lower() == 'done' or not link.strip():
+            print(f"Bỏ qua dòng {row_idx + 2}: Link='{link}', Status='{status}'")
             continue
             
         print(f"Đang xử lý: {title} - {link}")
