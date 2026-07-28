@@ -251,15 +251,32 @@ export default function TeacherDashboard({ user, onLogout }) {
         </div>
       </div>
 
-      {/* Video Tester Modal */}
+      {/* Testing Modal */}
       {testingVideo && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <button onClick={() => setTestingVideo(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={32} /></button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
+          <button onClick={() => setTestingVideo(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', cursor: 'pointer', color: 'white', zIndex: 1001 }}>
+             <X size={32} />
+          </button>
           
-          <div style={{ height: '70vh', maxWidth: '400px', width: '100%', background: '#000', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}>
-             <video src={testingVideo.videoUrl} autoPlay loop controls style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <div 
+            style={{ flex: 1, position: 'relative', background: '#000', cursor: 'pointer' }}
+            onClick={() => {
+              const video = document.getElementById('teacher-video');
+              if (video) {
+                if (video.paused) video.play();
+                else video.pause();
+              }
+            }}
+          >
+            <video 
+              id="teacher-video"
+              src={testingVideo.videoUrl} 
+              autoPlay 
+              loop 
+              style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} 
+            />
           </div>
-          
+
           <div style={{ color: 'white', textAlign: 'center', marginBottom: '24px' }}>
              <h2 style={{ fontFamily: '"ZCOOL KuaiLe", cursive', color: '#FFD700' }}>{testingVideo.title}</h2>
              <p style={{ fontSize: '20px' }}>{testingVideo.pinyin}</p>

@@ -41,12 +41,37 @@ function ReelCard({ data, progress, onClick }) {
 }
 
 function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
+  const videoRef = React.useRef(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.body.style.overflow = 'auto';
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setIsPlaying(true);
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
 
   const [liked, setLiked] = useState(false);
   const [registering, setRegistering] = useState(false);
@@ -69,7 +94,14 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick }) {
       
       <div className="viewer-content">
         {data.videoUrl ? (
-          <video src={data.videoUrl} autoPlay loop playsInline controls={false} />
+          <div style={{ position: 'relative', width: '100%', height: '100%' }} onClick={togglePlay}>
+            <video ref={videoRef} src={data.videoUrl} autoPlay loop playsInline controls={false} />
+            {!isPlaying && (
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Play size={48} color="white" fill="white" />
+              </div>
+            )}
+          </div>
         ) : (
           <img src={data.image} alt={data.title} />
         )}
