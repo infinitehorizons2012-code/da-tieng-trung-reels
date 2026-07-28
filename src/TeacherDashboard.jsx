@@ -22,7 +22,11 @@ export default function TeacherDashboard({ user, onLogout }) {
       const q = query(collection(db, 'users'), where('role', '==', 'student'));
       const snapshot = await getDocs(q);
       const studentsList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setStudents(studentsList);
+      const filteredStudents = studentsList.filter(s => {
+        if (!s.teacherIds || s.teacherIds.length === 0) return true; // Hiển thị học sinh cũ
+        return s.teacherIds.includes(user.id);
+      });
+      setStudents(filteredStudents);
 
       // 2. Fetch all progress
       const pQ = query(collection(db, 'progress'));
@@ -40,16 +44,20 @@ export default function TeacherDashboard({ user, onLogout }) {
     setLoading(false);
   };
 
-  const handleDeleteStudent = async (studentId, studentName) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản học sinh "${studentName}" không?`)) {
+  const handleRejectStudent = async (studentId, studentName) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa học sinh "${studentName}" khỏi lớp của bạn? (Tài khoản học sinh sẽ không bị xóa vĩnh viễn)`)) {
       try {
-        await deleteDoc(doc(db, 'users', studentId));
+        const student = students.find(s => s.id === studentId);
+        if (student && student.teacherIds) {
+          const newTeacherIds = student.teacherIds.filter(id => id !== user.id);
+          await setDoc(doc(db, 'users', studentId), { teacherIds: newTeacherIds }, { merge: true });
+        }
         setStudents(students.filter(s => s.id !== studentId));
         if (selectedStudent?.id === studentId) setSelectedStudent(null);
-        alert('Đã xóa tài khoản thành công!');
+        alert('Đã xóa học sinh khỏi danh sách lớp!');
       } catch (err) {
         console.error(err);
-        alert('Có lỗi xảy ra khi xóa!');
+        alert('Có lỗi xảy ra khi từ chối!');
       }
     }
   };
@@ -188,9 +196,9 @@ export default function TeacherDashboard({ user, onLogout }) {
                     {student.name} <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666' }}>(PIN: {student.pin})</span>
                   </div>
                   <button 
-                    onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.id, student.name); }}
+                    onClick={(e) => { e.stopPropagation(); handleRejectStudent(student.id, student.name); }}
                     style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', padding: '4px' }}
-                    title="Xóa học sinh này"
+                    title="Từ chối học sinh này"
                   >
                     <Trash2 size={16} />
                   </button>

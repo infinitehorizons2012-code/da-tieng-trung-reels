@@ -11,6 +11,9 @@ export default function Login({ onLogin, onCancel }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [selectedTeachers, setSelectedTeachers] = useState([]);
+
+  const teachersList = users.filter(u => u.role === 'teacher');
 
   useEffect(() => {
     // Load users for the dropdown
@@ -37,6 +40,12 @@ export default function Login({ onLogin, onCancel }) {
       return;
     }
 
+    if (isRegistering && role === 'student' && selectedTeachers.length === 0) {
+      setError('Học sinh phải chọn ít nhất 1 giáo viên');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isRegistering) {
         // Check if name exists
@@ -48,13 +57,18 @@ export default function Login({ onLogin, onCancel }) {
           return;
         }
 
-        const docRef = await addDoc(collection(db, 'users'), {
+        const userData = {
           name,
           pin,
           role
-        });
+        };
+        if (role === 'student') {
+          userData.teacherIds = selectedTeachers;
+        }
+
+        const docRef = await addDoc(collection(db, 'users'), userData);
         
-        const newUser = { id: docRef.id, name, pin, role };
+        const newUser = { id: docRef.id, ...userData };
         localStorage.setItem('currentUser', JSON.stringify(newUser));
         onLogin(newUser);
       } else {
@@ -145,6 +159,27 @@ export default function Login({ onLogin, onCancel }) {
                 <option value="student">Học sinh</option>
                 <option value="teacher">Nhân viên kiểm tra</option>
               </select>
+            </div>
+          )}
+
+          {isRegistering && role === 'student' && teachersList.length > 0 && (
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Chọn giáo viên của bạn</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#f8f9fa', padding: '12px', borderRadius: '8px', border: '1px solid #eee' }}>
+                {teachersList.map(t => (
+                  <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedTeachers.includes(t.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedTeachers([...selectedTeachers, t.id]);
+                        else setSelectedTeachers(selectedTeachers.filter(id => id !== t.id));
+                      }}
+                    />
+                    {t.name}
+                  </label>
+                ))}
+              </div>
             </div>
           )}
 
