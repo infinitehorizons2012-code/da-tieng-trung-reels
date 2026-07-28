@@ -229,8 +229,20 @@ export default function TeacherDashboard({ user, onLogout }) {
                         if (status === 'PRACTICING') color = '#ff9800';
                         if (status === 'FAILED') color = '#f44336';
                         return (
-                          <div key={video.id} onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: `3px solid ${color}`, opacity: 0.9 }}>
-                            <video src={video.videoUrl} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                          <div key={video.id} style={{ position: 'relative' }}>
+                            <div onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: `3px solid ${color}`, opacity: 0.9 }}>
+                              <video src={video.videoUrl} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteProgress(video.id);
+                              }}
+                              title="Xóa khỏi lịch sử"
+                              style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f44336', color: 'white', border: '2px solid white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                            >
+                              <X size={14} strokeWidth={3} />
+                            </button>
                           </div>
                         );
                       })}
