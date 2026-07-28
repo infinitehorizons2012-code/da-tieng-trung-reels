@@ -30,7 +30,7 @@ function ReelCard({ data, progress, onClick }) {
       )}
 
       <div className="reel-card-overlay">
-        <div className="card-chinese">{data.title}</div>
+        <div className="card-chinese">{data.title || `Video số ${data.id}`}</div>
       </div>
     </div>
   );
@@ -161,7 +161,7 @@ function ReelViewer({ data, progress, onClose, onRegisterTest, onLoginClick, use
         )}
         
         <div className="viewer-info">
-          <div className="viewer-chinese">{data.title}</div>
+          <div className="viewer-chinese">{data.title || `Video số ${data.id}`}</div>
           <div className="viewer-pinyin">{data.pinyin}</div>
           <div className="viewer-vietnamese">{data.vietnamese}</div>
         </div>
