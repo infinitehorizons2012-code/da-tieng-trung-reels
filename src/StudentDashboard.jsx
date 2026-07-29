@@ -195,11 +195,11 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
   const filteredReels = reelsData.filter(r => (r.tab || "1") === activeTab);
 
   const tabLabels = {
-    "1": "Bé Trai",
-    "2": "Bé Gái 1",
-    "3": "Bé Gái 2",
-    "4": "Người Nữ",
-    "5": "Người Nam",
+    "1": "Tab 1",
+    "2": "Tab 2",
+    "3": "Tab 3",
+    "4": "Tab 4",
+    "5": "Tab 5",
   };
 
   useEffect(() => {
