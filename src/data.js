@@ -1,4 +1,4 @@
-export const reelsData = [,
+export const reelsData = [
   {
     id: 1,
     tab: "2",
@@ -196,7 +196,7 @@ export const reelsData = [,
     videoUrl: "https://res.cloudinary.com/zopjocdi/video/upload/v1785284275/da-tieng-trung/ogfuvzynmnxmrr5mnewl.mp4",
     views: "0",
     likes: "0"
-
+  },
   {
     id: 20,
     tab: "3",
