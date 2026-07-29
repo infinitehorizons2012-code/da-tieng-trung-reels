@@ -191,7 +191,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
   const [activeTab, setActiveTab] = useState("1");
 
   // Get unique tabs
-  const tabs = [...new Set(reelsData.map(r => r.tab || "1"))].sort();
+  const tabs = [...new Set(reelsData.map(r => r.tab || "1"))].sort((a, b) => parseInt(a) - parseInt(b));
   const filteredReels = reelsData.filter(r => (r.tab || "1") === activeTab);
 
   const tabLabels = {
