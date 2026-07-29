@@ -117,6 +117,20 @@ export default function TeacherDashboard({ user, onLogout }) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    if (window.confirm("Bạn có chắc chắn muốn xóa tài khoản này không? Hành động này không thể hoàn tác.")) {
+      try {
+        await deleteDoc(doc(db, 'users', user.id));
+        onLogout();
+      } catch (err) {
+        console.error("Lỗi khi xóa tài khoản:", err);
+        alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+      }
+    }
+  };
+
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -268,9 +282,14 @@ export default function TeacherDashboard({ user, onLogout }) {
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid #ddd', paddingBottom: '16px' }}>
         <h2><Users style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Quản lý Học sinh (Nhân viên: {user.name})</h2>
-        <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
-          <LogOut size={18} /> Đăng xuất
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+            <LogOut size={18} /> Đăng xuất
+          </button>
+          <button onClick={handleDeleteAccount} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#c62828', border: '1px solid #c62828', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <Trash2 size={18} /> Xóa TK
+          </button>
+        </div>
       </header>
 
       {/* Main Layout */}
