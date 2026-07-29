@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { reelsData } from './data';
-import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users } from 'lucide-react';
+import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users, CalendarDays } from 'lucide-react';
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { ReportView } from './TeacherDashboard';
 
 function ReelCard({ data, progress, onClick, localIndex }) {
   const status = progress?.status;
@@ -189,6 +190,8 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
   const [teachersList, setTeachersList] = useState([]);
   const [selectedTeachers, setSelectedTeachers] = useState([]);
   const [activeTab, setActiveTab] = useState("1");
+  const [showReport, setShowReport] = useState(false);
+  const [dailyStats, setDailyStats] = useState([]);
 
   // Get unique tabs
   const tabs = [...new Set(reelsData.map(r => r.tab || "1"))].sort((a, b) => parseInt(a) - parseInt(b));
@@ -222,6 +225,20 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
       console.error(err);
     }
   };
+
+  const fetchMyReport = async () => {
+    if (!user) return;
+    try {
+      const q = query(collection(db, 'daily_stats'), where('userId', '==', user.id));
+      const snapshot = await getDocs(q);
+      const stats = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setDailyStats(stats);
+      setShowReport(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   const fetchLeaderboard = async () => {
     try {
@@ -341,6 +358,9 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
               <button onClick={fetchLeaderboard} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff9c4', color: '#fbc02d', border: '1px solid #fbc02d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                 <Trophy size={18} /> Bảng Vàng
               </button>
+              <button onClick={fetchMyReport} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e0f2f1', color: '#00897b', border: '1px solid #00897b', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <CalendarDays size={18} /> Báo cáo
+              </button>
               <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
                 <LogOut size={18} /> Thoát
               </button>
@@ -421,6 +441,19 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* My Report Modal */}
+      {showReport && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+            <button onClick={() => setShowReport(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            <h2 style={{ textAlign: 'center', color: '#00897b', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+              <CalendarDays size={32} /> Báo cáo học tập của tôi
+            </h2>
+            <ReportView stats={dailyStats} progress={progressData} reels={reelsData} />
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@ import { collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimest
 import { LogOut, CheckCircle, Clock, XCircle, Users, Play, X, Trash2, CalendarDays } from 'lucide-react';
 import { reelsData } from './data';
 
-function ReportView({ stats, progress, reels }) {
+export function ReportView({ stats, progress, reels }) {
   const grouped = {};
   stats.forEach(s => {
     if (!grouped[s.date]) grouped[s.date] = [];
