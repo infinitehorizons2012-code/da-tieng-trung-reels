@@ -318,7 +318,16 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
 
   return (
     <div className="app-container">
-      <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 100, 
+        background: 'var(--bg-color)', 
+        margin: '-20px -20px 0', 
+        padding: '20px 20px 10px',
+        borderBottom: '1px solid #ddd'
+      }}>
+      <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 'none', paddingBottom: 0, marginBottom: '10px' }}>
         <h1>
           <img src="https://images.unsplash.com/photo-1590845947698-8924d7409b56?w=100&h=100&fit=crop" alt="Avatar" className="avatar" />
           {user ? `Xin chào, ${user.name}!` : 'Xin chào, Khách!'}
@@ -345,7 +354,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
       </header>
 
       {/* Tabs Bar */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '20px 0', padding: '0 20px', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '10px 0', padding: '0 20px', overflowX: 'auto' }}>
         {tabs.map(tabId => (
           <button 
             key={tabId}
@@ -367,6 +376,7 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
             {tabLabels[tabId] || `Tab ${tabId}`}
           </button>
         ))}
+      </div>
       </div>
 
       <main className="reels-grid">
