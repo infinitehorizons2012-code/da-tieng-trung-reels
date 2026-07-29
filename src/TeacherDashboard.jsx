@@ -52,8 +52,7 @@ export function ReportView({ stats, progress, reels }) {
                     const tabVideos = reels.filter(r => (r.tab || "1") === videoTab);
                     const localIndex = video ? tabVideos.findIndex(r => r.id === video.id) : -1;
                     
-                    const tabLabels = { "1": "Bé Trai", "2": "Bé Gái 1", "3": "Bé Gái 2", "4": "Người Nữ", "5": "Người Nam" };
-                    const tabName = tabLabels[videoTab] || `Tab ${videoTab}`;
+                    const tabName = `Tab ${videoTab}`;
 
                     return (
                       <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
