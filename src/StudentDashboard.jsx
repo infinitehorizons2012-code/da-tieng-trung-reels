@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { reelsData } from './data';
-import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users, CalendarDays } from 'lucide-react';
+import { Play, Heart, MessageCircle, Share2, MoreHorizontal, X, ArrowLeft, LogOut, CheckCircle, Clock, XCircle, Trophy, Users, CalendarDays, Trash2 } from 'lucide-react';
 import { db } from './firebase';
-import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp, increment, deleteDoc } from 'firebase/firestore';
 import { ReportView } from './TeacherDashboard';
 
 function ReelCard({ data, progress, onClick, localIndex }) {
@@ -239,6 +239,19 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    if (window.confirm("Bạn có chắc chắn muốn xóa tài khoản này không? Hành động này không thể hoàn tác.")) {
+      try {
+        await deleteDoc(doc(db, 'users', user.id));
+        onLogout();
+      } catch (err) {
+        console.error("Lỗi khi xóa tài khoản:", err);
+        alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+      }
+    }
+  };
+
 
   const fetchLeaderboard = async () => {
     try {
@@ -363,6 +376,9 @@ export default function StudentDashboard({ user, onLogout, onLoginClick }) {
               </button>
               <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#d32f2f', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
                 <LogOut size={18} /> Thoát
+              </button>
+              <button onClick={handleDeleteAccount} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffebee', color: '#c62828', border: '1px solid #c62828', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <Trash2 size={18} /> Xóa TK
               </button>
             </>
           ) : (
