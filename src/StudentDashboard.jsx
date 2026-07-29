@@ -20,7 +20,7 @@ function ReelCard({ data, progress, onClick, localIndex }) {
         {data.image ? (
           <img src={data.image} alt={data.title} loading="lazy" />
         ) : data.videoUrl ? (
-          <video src={data.videoUrl} preload="metadata" muted playsInline style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+          <img src={data.videoUrl.replace('.mp4', '.jpg')} alt={data.title || "Video thumbnail"} loading="lazy" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
         ) : null}
         
         {/* Status Badge */}
