@@ -342,6 +342,38 @@ export default function TeacherDashboard({ user, onLogout }) {
               const waitingVideos = safeReels.filter(v => studentProgress[v.id] && studentProgress[v.id].status === 'WAITING');
               const historyVideos = safeReels.filter(v => studentProgress[v.id] && studentProgress[v.id].status !== 'WAITING');
 
+              const historyGrouped = {};
+              historyVideos.forEach(v => {
+                const prog = studentProgress[v.id];
+                let dateStr = "Chưa rõ ngày";
+                if (prog.updatedAt) {
+                  let d = null;
+                  if (typeof prog.updatedAt.toDate === 'function') {
+                    d = prog.updatedAt.toDate();
+                  } else if (prog.updatedAt.seconds) {
+                    d = new Date(prog.updatedAt.seconds * 1000);
+                  } else if (prog.updatedAt instanceof Date) {
+                    d = prog.updatedAt;
+                  } else if (typeof prog.updatedAt === 'number' || typeof prog.updatedAt === 'string') {
+                    d = new Date(prog.updatedAt);
+                  }
+                  
+                  if (d && !isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                  }
+                }
+                if (!historyGrouped[dateStr]) historyGrouped[dateStr] = [];
+                historyGrouped[dateStr].push(v);
+              });
+              
+              const historyDates = Object.keys(historyGrouped).sort((a, b) => {
+                if (a === "Chưa rõ ngày") return 1;
+                if (b === "Chưa rõ ngày") return -1;
+                const [d1, m1, y1] = a.split('/');
+                const [d2, m2, y2] = b.split('/');
+                return new Date(y2, m2-1, d2) - new Date(y1, m1-1, d1);
+              });
+
               return (
                 <div>
                   <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid #eee' }}>
@@ -377,7 +409,7 @@ export default function TeacherDashboard({ user, onLogout }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', marginBottom: '32px' }}>
                       {waitingVideos.map(video => (
                         <div key={video.id} onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: '2px solid #1976d2', position: 'relative', aspectRatio: '9/16' }}>
-                          <video src={video.videoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={video.videoUrl.replace('.mp4', '.jpg')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" alt="thumbnail" />
                           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', color: 'white', padding: '8px', fontSize: '12px', textAlign: 'center' }}>Bấm để kiểm tra</div>
                         </div>
                       ))}
@@ -389,33 +421,40 @@ export default function TeacherDashboard({ user, onLogout }) {
                   )}
 
                   {/* All other videos history */}
-                  <h4 style={{ marginBottom: '12px' }}>Lịch sử luyện tập ({historyVideos.length})</h4>
-                  {historyVideos.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
-                      {historyVideos.map(video => {
-                        const status = studentProgress[video.id].status;
-                        let color = '#ccc';
-                        if (status === 'PASSED') color = '#4caf50';
-                        if (status === 'PRACTICING') color = '#ff9800';
-                        if (status === 'FAILED') color = '#f44336';
-                        return (
-                          <div key={video.id} style={{ position: 'relative' }}>
-                            <div onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: `3px solid ${color}`, opacity: 0.9 }}>
-                              <video src={video.videoUrl} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
-                            </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteProgress(video.id);
-                              }}
-                              title="Xóa khỏi lịch sử"
-                              style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f44336', color: 'white', border: '2px solid white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-                            >
-                              <X size={14} strokeWidth={3} />
-                            </button>
+                  <h4 style={{ marginBottom: '12px', marginTop: '24px' }}>Lịch sử luyện tập ({historyVideos.length})</h4>
+                  {historyDates.length > 0 ? (
+                    <div>
+                      {historyDates.map(date => (
+                        <div key={date} style={{ marginBottom: '24px' }}>
+                          <h5 style={{ background: '#f5f5f5', padding: '8px 12px', borderRadius: '8px', color: '#555', marginBottom: '12px' }}>{date}</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
+                            {historyGrouped[date].map(video => {
+                              const status = studentProgress[video.id].status;
+                              let color = '#ccc';
+                              if (status === 'PASSED') color = '#4caf50';
+                              if (status === 'PRACTICING') color = '#ff9800';
+                              if (status === 'FAILED') color = '#f44336';
+                              return (
+                                <div key={video.id} style={{ position: 'relative' }}>
+                                  <div onClick={() => setTestingVideo(video)} style={{ cursor: 'pointer', borderRadius: '8px', overflow: 'hidden', border: `3px solid ${color}`, opacity: 0.9 }}>
+                                    <img src={video.videoUrl.replace('.mp4', '.jpg')} style={{ width: '100%', height: '120px', objectFit: 'cover' }} loading="lazy" alt="thumbnail" />
+                                  </div>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteProgress(video.id);
+                                    }}
+                                    title="Xóa khỏi lịch sử"
+                                    style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f44336', color: 'white', border: '2px solid white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                                  >
+                                    <X size={14} strokeWidth={3} />
+                                  </button>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px', color: '#666', textAlign: 'center' }}>
