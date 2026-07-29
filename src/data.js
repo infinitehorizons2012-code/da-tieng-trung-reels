@@ -240,16 +240,5 @@ export const reelsData = [
     videoUrl: "https://res.cloudinary.com/zopjocdi/video/upload/v1785285458/da-tieng-trung/ddw5da0em2hcukbpz7sl.mp4",
     views: "0",
     likes: "0"
-  },
-  {
-    id: 24,
-    tab: "1",
-    title: "",
-    pinyin: "",
-    vietnamese: "",
-    image: "", 
-    videoUrl: "https://res.cloudinary.com/zopjocdi/video/upload/v1785285898/da-tieng-trung/odawbglllx4wr1q5okto.mp4",
-    views: "0",
-    likes: "0"
   }
 ];
